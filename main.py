@@ -1,10 +1,11 @@
 import customtkinter as ctk
 from ctkdateentry import CTkDateEntry, CTkStringVar
+from tktimepicker import AnalogPicker, AnalogThemes
 import datetime
 
 # APP SETUP
 app = ctk.CTk()
-app.geometry("700x500")
+app.geometry("900x600")
 app.title("To-Do App")
 ctk.set_appearance_mode("dark")
 app.after(200, lambda: app.iconbitmap("to-do.ico"))  # Windows only
@@ -26,10 +27,11 @@ def refresh_tasks():
 
     # one frame per task
     for i, item in enumerate(tasks, start=1):
-        row = ctk.CTkFrame(task_container)
+        row = ctk.CTkFrame(task_container, border_width=1, border_color="blue")
         row.pack(fill="x", pady=3, padx=10)
         ctk.CTkCheckBox(row, text='', width=10).pack(side='left')
-        ctk.CTkLabel(row, text=f"{i}. {item}", anchor="w", font=("Outfit", 15, 'bold'), fg_color='#6F7173', padx=10
+        ctk.CTkLabel(row, text=f"{i}. {item}", anchor="w", font=("Outfit", 15, 'bold'), fg_color='#6F7173', padx=10,
+                     corner_radius=5
                      ).pack(side="left", padx=(0, 8), pady=6)
         ctk.CTkLabel(row, text="Priority: ").pack(side='left', padx=5)
         COLORS = {
@@ -45,10 +47,50 @@ def refresh_tasks():
         priority.pack(side='left', padx=10)
         update()
 
-        var = CTkStringVar(row, value='Enter a Date')
+        var = CTkStringVar(row, value='Enter a deadline')
         date_entry = CTkDateEntry(row, variable=var)
         date_entry.pack(side="left")
 
+        # Time
+
+
+        def open_time_picker():
+            popup = ctk.CTkToplevel(row)
+            popup.title("Select Time")
+            popup.geometry("300x350")
+
+            # Keep popup above the main window
+            popup.transient(row)
+            popup.grab_set()
+
+            time_picker = AnalogPicker(popup)
+            time_picker.pack(expand=True, fill="both", padx=10, pady=10)
+            theme = AnalogThemes(time_picker)
+            theme.setDracula()
+
+            def select_time():
+                # We'll put the selected time here
+                time_button.configure(text="Time selected")
+                popup.destroy()
+                hours, minutes, period = time_picker.time()
+                time_lab.configure(text=f"{hours}:{minutes}")
+
+            ctk.CTkButton(
+                popup,
+                text="Select",
+                command=select_time
+            ).pack(pady=(0, 15))
+
+        time_button = ctk.CTkButton(
+            row,
+            text="Select time",
+            width=100,
+            command=open_time_picker
+        )
+        time_button.pack(side="left", padx=10)
+
+        time_lab = ctk.CTkLabel(row, text="0:00")
+        time_lab.pack(side="left", padx=5)
         """def update():
             if priority.get() == 'Low ⚑':
                 priority.configure(text_color='#42AF2F')

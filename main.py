@@ -21,17 +21,17 @@ PRIORITY_COLORS = {
 
 
 # WIDGETS (created in the order you want them to appear)
-title = ctk.CTkLabel(app, text="To-Do App", font=("Outfit", 30, "bold"))
+title = ctk.CTkLabel(app, text="To-Do App", font=("Outfit", 30, "bold")) # 1
 title.pack(pady=10)
 
 color = app.cget("fg_color")
 
-button_frame = ctk.CTkFrame(app, fg_color=color, height=20)
+button_frame = ctk.CTkFrame(app, fg_color=color, height=20) # 2
 button_frame.pack(fill="x", pady=8)
 
-input_frame = ctk.CTkFrame(app, fg_color=color, height=20)
+input_frame = ctk.CTkFrame(app, fg_color=color, height=20) # 3
 input_frame.pack(fill="x", pady=8)
-task_input = ctk.CTkEntry(input_frame, placeholder_text="Enter your task")
+task_input = ctk.CTkEntry(input_frame, placeholder_text="Enter your task") # 4
 
 # Task list goes last so it appears below everything else
 task_container = ctk.CTkScrollableFrame(app)
@@ -42,26 +42,27 @@ empty = ctk.CTkLabel(task_container, text="Your to-do list is empty",
 
 
 # FUNCTIONS
+# 1 Deletes label if list is empty
 def update_empty_label():
     if tasks:
         empty.pack_forget()
     else:
         empty.pack(pady=10)
 
-
+#2 Packs entry and button and focuses on entry
 def add_task():
     task_input.pack(side='left', padx=15)
     enter.pack(side='left', padx=5)
     task_input.focus()
 
-
+# creates row with needed widgets and functions
 def create_row(number, text):
     """Builds one task row (everything it needs is defined in here)."""
     row = ctk.CTkFrame(task_container, border_width=1, border_color="blue")
     row.pack(fill="x", pady=3, padx=10)
 
     ctk.CTkCheckBox(row, text='', width=10).pack(side='left')
-    ctk.CTkLabel(row, text=f"{number}. {text}", anchor="w",
+    ctk.CTkLabel(row, text=f"• {text}", anchor="w",
                  font=("Outfit", 15, 'bold'), fg_color='#6F7173',
                  padx=10, corner_radius=5
                  ).pack(side="left", padx=(0, 8), pady=6)
@@ -71,11 +72,13 @@ def create_row(number, text):
 
     def update(choice=None):
         priority.configure(text_color=PRIORITY_COLORS.get(priority.get(), '#FFFFFF'))
+        # configure priority text color depending on the selected value
 
     priority = ctk.CTkComboBox(row, values=list(PRIORITY_COLORS.keys()),
                                command=update)
     priority.pack(side='left', padx=10)
     update()
+    # priority gets created with the update function before it and once the combo is packed
 
     # Date
     var = CTkStringVar(row, value='Enter a deadline')
@@ -98,6 +101,7 @@ def create_row(number, text):
         def select_time():
             hours, minutes, period = time_picker.time()
             time_lab.configure(text=f"{hours}:{minutes:02d} {period}")
+            print(time_lab.cget("text"))
             time_button.configure(text="Time selected")
             popup.destroy()
 

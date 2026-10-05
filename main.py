@@ -61,7 +61,17 @@ def create_row(number, text):
     row = ctk.CTkFrame(task_container, border_width=1, border_color="blue")
     row.pack(fill="x", pady=3, padx=10)
 
-    ctk.CTkCheckBox(row, text='', width=10).pack(side='left')
+    def on_check():
+        if check.get():
+            delete_button.pack(side='right', padx=5)
+        else:
+            delete_button.pack_forget()
+    def delete_row():
+        row.pack_forget()
+    check = ctk.BooleanVar(value=False)
+    delete_button = ctk.CTkButton(row, width=6, text="🗑", text_color="red", fg_color='transparent',
+                                  font=("Helvetica", 12, 'bold'), command=delete_row)
+    ctk.CTkCheckBox(row, text='', width=10, variable=check, command=on_check).pack(side='left')
     ctk.CTkLabel(row, text=f"• {text}", anchor="w",
                  font=("Outfit", 15, 'bold'), fg_color='#6F7173',
                  padx=10, corner_radius=5
@@ -91,7 +101,7 @@ def create_row(number, text):
         popup.title("Select Time")
         popup.geometry("300x350")
         popup.transient(app)   # keep popup above the main window
-        popup.grab_set()
+        popup.grab_set() # important?
 
         time_picker = AnalogPicker(popup)
         time_picker.pack(expand=True, fill="both", padx=10, pady=10)

@@ -1,8 +1,30 @@
+import time
+import datetime
 import customtkinter as ctk
 from ctkdateentry import CTkDateEntry, CTkStringVar
 from tktimepicker import AnalogPicker, AnalogThemes
 import json
 import atexit
+import sys
+import os
+from plyer import notification
+
+
+# PATH HELPERS (needed for PyInstaller)
+def resource_path(relative_path):
+    """For bundled read-only files (icon, font)."""
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, relative_path)
+
+
+def app_dir():
+    """Folder where the exe (or main.py) lives, for files you write to."""
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+
+TASKS_FILE = os.path.join(app_dir(), "tasks.json")
 
 
 # APP SETUP
@@ -10,15 +32,15 @@ app = ctk.CTk()
 app.geometry("900x600")
 app.title("To-Do App")
 ctk.set_appearance_mode("dark")
-app.after(200, lambda: app.iconbitmap("to-do.ico"))  # Windows only
-ctk.FontManager.load_font("Outfit-Black.ttf")
+app.after(200, lambda: app.iconbitmap(resource_path("to-do.ico")))  # Windows only
+ctk.FontManager.load_font(resource_path("Outfit-Black.ttf"))
 # LIST BACKEND
 tasks = []
 for i in tasks:
     print(i)
 
 try:
-    with open('tasks.json', 'r') as f:
+    with open(TASKS_FILE, 'r') as f:
         tasks = json.load(f)
 except (FileNotFoundError, json.JSONDecodeError):
     tasks = []
@@ -26,7 +48,7 @@ except (FileNotFoundError, json.JSONDecodeError):
 
 def save_tasks():
     data = json.dumps(tasks)  # serialize first; if this fails, the file is untouched
-    with open('tasks.json', 'w') as f:
+    with open(TASKS_FILE, 'w') as f:
         f.write(data)
 # saving tasks
 atexit.register(save_tasks)
@@ -47,6 +69,23 @@ color = app.cget("fg_color")
 
 button_frame = ctk.CTkFrame(app, fg_color=color, height=20) # 2
 button_frame.pack(fill="x", pady=8)
+
+time.sleep(10)
+notification.notify(title='Reminder', message='Task example is due today', timeout=10,
+                    app_icon=resource_path("to-do.ico"), app_name='To-Do App')
+print(datetime.datetime.now())
+
+def change_theme():
+    mode = ctk.get_appearance_mode()
+    if mode == "Dark":
+        theme_pick.configure(text='☾')
+        ctk.set_appearance_mode('light')
+    elif mode == "Light":
+        theme_pick.configure(text='☼', width=14, font=('Helvetica', 12, 'bold'))
+        ctk.set_appearance_mode('dark')
+
+theme_pick = ctk.CTkButton(button_frame, text='☾', width=10, command=change_theme)
+theme_pick.pack(side='right', padx=5)
 
 input_frame = ctk.CTkFrame(app, fg_color=color, height=20) # 3
 input_frame.pack(fill="x", pady=8)
@@ -94,19 +133,17 @@ def create_row(number, task_data):
 
     def delete_row():
         row.pack_forget()
-        for i, item in enumerate(tasks, start=1):
-            print(i, item)
-            global number
-            number = i
-        label_num = number
         print(task_data)
-        del tasks[label_num-1]
+        # FIX: remove the task that belongs to this row (not always the last one)
+        if task_data in tasks:
+            tasks.remove(task_data)
+        update_empty_label()
 
     check = ctk.BooleanVar(value=False)
     delete_button = ctk.CTkButton(row, width=6, text="🗑", text_color="red", fg_color='transparent',
                                   font=("Helvetica", 12, 'bold'), command=delete_row)
     ctk.CTkCheckBox(row, text='', width=10, variable=check, command=on_check).pack(side='left')
-    ctk.CTkLabel(row, text=f"{number}- {text}", anchor="w",
+    ctk.CTkLabel(row, text=f"• {text}", anchor="w",
                  font=("Outfit", 15, 'bold'), fg_color='#6F7173',
                  padx=10, corner_radius=5
                  ).pack(side="left", padx=(0, 8), pady=6)
@@ -191,7 +228,7 @@ def append_task():
 
 if tasks:
     for i, item in enumerate(tasks):
-        create_row(i, tasks[i-1])
+        create_row(i, item)  # FIX: use the current item, not tasks[i-1]
 
 # Buttons that depend on the functions above
 add = ctk.CTkButton(button_frame, text="Add task", font=("Outfit", 15),
